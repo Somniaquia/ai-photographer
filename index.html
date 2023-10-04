@@ -1,19 +1,54 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
-    <link href="./styles.css" rel="stylesheet">
-    <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version"></span>,
-    and Electron <span id="electron-version"></span>.
+<html lang="kr">
 
-    <!-- You can also require other files to run in this process -->
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./style.css">
+    <script src="./main.js"></script>
+    <title>대진네컷</title>
+</head>
+
+<body>
+    <div id="content">
+        <div id="top_logo_wrap">
+            <img src="./img/logo.jpeg" onclick="takePhotoHandler()">
+        </div>
+        <div id="img_wrap">
+            <div id="current_preview">
+                <video id="preview_video" muted></video>
+                <img id="img_4" src="">
+                <div id="timer">3</div>
+            </div>
+            <div id="result_wrap">
+                <div id="result_box">
+                    <img id="img_1" src="">
+                </div>
+                <div id="result_box">
+                    <img id="img_2" src="">
+                </div>
+                <div id="result_box">
+                    <img id="img_3" src="">
+                </div>
+                <div id="bottom_logo_wrap">
+                    <img src="./img/logo.jpeg" onclick="window.location.href = './'">
+                </div>
+            </div>
+        </div>
+        <div id="result_overlay">
+            <div id="result_pop">
+                <img id="result_pop_img" onclick="window.location.href = './'">
+            </div>
+            <div id="email_input">
+                <h3>사진을 받으실 이메일을 입력해주세요!</h3>
+                <input type="text" id="email_input_input" placeholder="E-mail">
+                <button onclick="downloadFinalResult()">완료</button>
+            </div>
+        </div>
+    </div>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <canvas id="result_canvas" width="400" height="1080" style="display: none;"></canvas>
+    
     <script src="./renderer.js"></script>
-  </body>
+</body>
+
 </html>

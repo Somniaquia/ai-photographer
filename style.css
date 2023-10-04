@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles:wght@400;700&family=Jua&family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Fuzzy Bubbles', sans-serif;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+#content {
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    overflow: hidden;
+}
+
+#top_logo_wrap {
+    width: 100%;
+    height: 170px;
+    margin-top: 60px;
+}
+
+#top_logo_wrap>img {
+    height: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+#img_wrap {
+    width: 1660px;
+    height: 720px;
+    margin: 0 auto;
+    margin-top: 30px;
+}
+
+#current_preview {
+    width: 1280px;
+    height: 720px;
+    background-color: #FFFFFF;
+    float: left;
+    position: relative;
+}
+
+#preview_video {
+    width: 100%;
+    height: 100%;
+    transform: scaleX(-1);
+}
+
+#result_wrap {
+    width: 320px;
+    height: 720px;
+    float: right;
+}
+
+#result_box {
+    width: 320px;
+    height: 180px;
+    background-color: #FFFFFF;
+    margin-bottom: 40px;
+    transform: scaleX(-1);
+}
+
+#result_box>img {
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+#result_box:nth-child(3) {
+    margin-bottom: 0;
+}
+
+#bottom_logo_wrap {
+    width: 320px;
+    height: 95px;
+    margin-top: 5px;
+}
+
+#bottom_logo_wrap>img {
+    height: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+#timer {
+    position: absolute;
+    font-size: 100px;
+    top: 20px;
+    right: 40px;
+    /* font-weight: bold; */
+    color: #FFFFFF;
+}
+
+#img_4 {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: none;
+    transform: scaleX(-1);
+}
+
+#result_canvas {
+    width: 400px;
+    height: 1080px;
+    display: block;
+}
+
+#result_overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(50px);
+    opacity: 0;
+    display: none;
+    animation-name: opacity_anim;
+    animation-duration: 500ms;
+    animation-fill-mode: forwards;
+    overflow: hidden;
+}
+
+@keyframes opacity_anim {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+#result_pop {
+    width: 300px;
+    height: 810px;
+    margin: 0 auto;
+    margin-top: 135px;
+}
+
+#result_pop_img {
+    width: 100%;
+    height: 100%;
+    animation-name: show_img_anim;
+    animation-duration: 4000ms;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+    animation-delay: 600ms;
+    transform: translateY(150%);
+}
+
+#email_input {
+    opacity: 0;
+    width: 1000px;
+    height: 700px;
+    position: absolute;
+    right: 200px;
+    top: 190px;
+    animation-name: opacity_anim;
+    animation-duration: 700ms;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+    animation-delay: 4500ms;
+}
+
+@keyframes show_img_anim {
+    0% {
+        transform: translateY(150%);
+    }
+
+    30% {
+        transform: translateY(0%);
+    }
+
+    70% {
+        transform: translateY(0%) translateX(0%);
+    }
+
+    100% {
+        transform: translateY(0%) translateX(-600px);
+    }
+}
+
+#email_input>h3 {
+    font-family: 'Jua', sans-serif;
+    font-size: 50px;
+    text-align: center;
+    display: block;
+    margin-top: 100px;
+    text-shadow: 0 0 40px rgba(255, 255, 255, 100%);
+}
+
+#email_input_input {
+    width: 600px;
+    height: 50px;
+    margin: 0 auto;
+    margin-top: 150px;
+    border-radius: 10px;
+    border: none;
+    display: block;
+    font-size: 25px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+#email_input>button {
+    font-size: 30px;
+    width: 400px;
+    height: 50px;
+    border: none;
+    display: block;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    font-family: 'Jua', sans-serif;
+    margin: 0 auto;
+    margin-top: 100px;
+    cursor: pointer;
+    transition-duration: 200ms;
+}
+
+#email_input>button:hover {
+    transform: scale(110%);
+}
