@@ -9,9 +9,7 @@
 navigator.mediaDevices.getUserMedia({ audio: false, video: { width: 1920, height: 1080 } })
     .then(function (stream) {
         let video = document.getElementById("preview_video");
-
         video.srcObject = stream;
-
         video.onloadedmetadata = function (e) {
             video.play();
         };
