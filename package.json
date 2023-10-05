@@ -18,5 +18,8 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^26.2.4"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.5"
   }
 }

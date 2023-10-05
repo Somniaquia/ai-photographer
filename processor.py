@@ -13,9 +13,10 @@ class DiffusionProcessor:
         self.pipe.scheduler = UniPCMultistepScheduler.from_config(self.pipe.scheduler.config)
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_xformers_memory_efficient_attention()
+        self.pipe.safety_checker = lambda images, clip_input: (images, False)
     
     def process(self, image, style: str):
-        image = np.array(image)
+        image = np.array(image.resize((512, 512)))
 
         low_threshold = 100
         high_threshold = 200
@@ -29,8 +30,8 @@ class DiffusionProcessor:
 
         output = self.pipe(
             style + ", best quality, extremely detailed",
-            self.canny_image,
-            negative_prompt=["monochrome, lowres, bad anatomy, worst quality, low quality"],
+            image,
+            negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality",
             num_inference_steps=20,
             generator=generator,
         )
@@ -46,22 +47,22 @@ from io import BytesIO
 from PIL import Image
 
 async def handle_socket(websocket, path):
+    print("Received websocket message")
     async for message in websocket:
         data = json.loads(message)
-        image_data = data.get('image_data', '').split(",")[1]
         image_index = data.get('image_index', '')
 
-        decoded_image = base64.b64decode(image_data)
-        image = Image.open(BytesIO(decoded_image))
+        try:
+            with open(f'image.png', 'rb') as f:
+                image = Image.open(f)
 
-        processed_image = processor.process(image)
+                processed_image = processor.process(image, "A Ghibli character.")
+            processed_image.images[0].save(f'processed_image_{image_index}.png')
 
-        # Send the images back with Base64 string format
-        buffered = BytesIO()
-        processed_image.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-
-        await websocket.send(json.dumps({"image_data": img_str}))
+            await websocket.send(json.dumps({"success": True}))
+        except Exception as e:
+            print(f"Error processing image {image_index}: {str(e)}")
+            await websocket.send(json.dumps({"success": False, "error": e}))
 
 processor = DiffusionProcessor("runwayml/stable-diffusion-v1-5") # DiffusionProcessor("sd-dreambooth-library/messy_sketch_art_style")
 

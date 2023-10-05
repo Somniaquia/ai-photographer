@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="./style.css">
     <script src="./main.js"></script>
-    <title>대진네컷</title>
+    <title>무언가 이상한 AI 대진네컷!</title>
 </head>
 
 <body>
     <div id="content">
         <div id="top_logo_wrap">
-            <img src="./img/logo.jpeg" onclick="takePhotoHandler()">
+            <img src="./img/logo.jpeg" onclick="takePhotos()">
         </div>
         <div id="img_wrap">
             <div id="current_preview">
@@ -30,16 +30,16 @@
                     <img id="img_3" src="">
                 </div>
                 <div id="bottom_logo_wrap">
-                    <img src="./img/logo.jpeg" onclick="window.location.href = './'">
+                    <img id="reloadButton" src="./img/logo.jpeg">
                 </div>
             </div>
         </div>
         <div id="result_overlay">
             <div id="result_pop">
-                <img id="result_pop_img" onclick="window.location.href = './'">
+                <img id="result_pop_img">
             </div>
             <div id="email_input">
-                <h3>사진을 받으실 이메일을 입력해주세요!</h3>
+                <h3>이 끔찍한 사진들을 보내실 이메일을 입력해주세요!</h3>
                 <input type="text" id="email_input_input" placeholder="E-mail">
                 <button onclick="downloadFinalResult()">완료</button>
             </div>

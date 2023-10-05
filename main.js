@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session } = require('electron')
+const { app, BrowserWindow, session, ipcMain } = require('electron')
 const { spawn } = require('child_process');
 const path = require('node:path')
 
@@ -18,6 +18,10 @@ function createWindow () {
   })
 
   mainWindow.loadFile('index.html')
+
+  ipcMain.on('reload-app', () => {
+    mainWindow.reload();
+  });
 
   session
     .fromPartition('default')
