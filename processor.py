@@ -26,7 +26,7 @@ class DiffusionProcessor:
         image = np.concatenate([image, image, image], axis=2)
         image = Image.fromarray(image)
 
-        generator = torch.Generator(device="cuda").manual_seed(2)
+        generator = torch.Generator(device="cuda" if torch.cuda.is_available() else "cpu").manual_seed(2)
 
         output = self.pipe(
             style + ", best quality, extremely detailed",

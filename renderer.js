@@ -97,7 +97,14 @@ async function takePhotos() {
             }
             
             await takePhoto(i);
-            document.getElementById(`img_${i}`).src = path.join(__dirname, `processed_image_${i}.png`);
+            const imagePath = path.join(`processed_image_${i}.png`);
+            
+            if (fs.existsSync(imagePath)) {
+                document.getElementById(`img_${i}`).src = imagePath;
+                document.getElementById(`img_${i}`).style.display = 'block';
+            } else {
+                console.error(`Image does not exist: ${imagePath}`);
+            }
         }
         
         drawResult(img_url_1, img_url_2, img_url_3, img_url_4);

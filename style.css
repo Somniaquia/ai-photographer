@@ -62,7 +62,7 @@ body {
 #result_box {
     width: 320px;
     height: 180px;
-    background-color: #FFFFFF;
+    background-color: #FFF;
     margin-bottom: 40px;
     transform: scaleX(-1);
 }
