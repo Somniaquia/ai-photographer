@@ -1,12 +1,48 @@
-/**
- * This file is loaded via the <script> tag in the index.html file and will
- * be executed in the renderer process for that window. No Node.js APIs are
- * available in this process because `nodeIntegration` is turned off and
- * `contextIsolation` is turned on. Use the contextBridge API in `preload.js`
- * to expose Node.js functionality from the main process.
- */
+//#region Websocket
+function connectWebSocket() {
+    socket = new WebSocket('ws://localhost:8765'); 
+    
+    socket.onopen = () => {
+        console.log("WebSocket is open now.");
+        retryCount = 0;
+    };
+    
+    socket.onclose = (event) => {
+        if (event.wasClean) {
+            console.log(`Connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+        } else {
+            console.log('Connection lost, retrying... Retry Cound: ', retryCount);
+            retryCount++;
+            setTimeout(connectWebSocket, 1000);
+        }
+    };
 
-navigator.mediaDevices.getUserMedia({ audio: false, video: { width: 1920, height: 1080 } })
+    socket.onmessage = (event) => {
+        console.log('Message from server: ', event.data);
+        let receivedData = JSON.parse(event.data);
+        let imageData = receivedData.image_data;
+    };    
+    
+    socket.addEventListener('error', (event) => {
+        console.log('Error: ', event);
+    });
+}
+
+function sendDataToServer(data) {
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(data);
+    } else {
+        console.log('WebSocket is NOT open. Data is not sent.');
+    }
+}
+
+let socket;
+let retryCount = 0;
+
+connectWebSocket();
+//#endregion
+
+navigator.mediaDevices.getUserMedia({ audio: false, video: true })
     .then(function (stream) {
         let video = document.getElementById("preview_video");
         video.srcObject = stream;
@@ -15,28 +51,23 @@ navigator.mediaDevices.getUserMedia({ audio: false, video: { width: 1920, height
         };
     })
     .catch(function (err) {
-        console.log(err.name + ": " + err.message);
+        console.log(err);
     });
 
 let clicked = false;
 
 function takePhotoHandler() {
-    if (clicked == true) {
-        return;
-    }
+    if (clicked == true) return;
     clicked = true;
+
     let timer_elem = document.getElementById("timer");
-    let main_loop_timer = 0;
+    let main_loop_timer = 0; 
     let main_loop = setInterval(() => {
         if (main_loop_timer != 0 && main_loop_timer % 3 == 0) {
             takePhoto();
         }
         timer_elem.innerText = 3 - (main_loop_timer % 3);
         if (main_loop_timer >= 13) {
-            // downloadFunc("1.jpg", img_url_1);
-            // downloadFunc("2.jpg", img_url_2);
-            // downloadFunc("3.jpg", img_url_3);
-            // downloadFunc("4.jpg", img_url_4);
             drawResult(img_url_1, img_url_2, img_url_3, img_url_4);
             clearInterval(main_loop);
         }
@@ -44,65 +75,23 @@ function takePhotoHandler() {
     }, 1000);
 }
 
-let img_url_1 = "";
-let img_url_2 = "";
-let img_url_3 = "";
-let img_url_4 = "";
-
-let photo_no = 1;
+let photo_index = 1;
 
 function takePhoto() {
     let canvas = document.getElementById("canvas");
-    let video = document.getElementById("preview_video");
-    const img1 = document.getElementById("img_1");
-    const img2 = document.getElementById("img_2");
-    const img3 = document.getElementById("img_3");
-    const img4 = document.getElementById("img_4");
-    let timer_elem = document.getElementById("timer");
-
     const context = canvas.getContext('2d');
 
-    width = 1920;
-    height = 1080;
+    width = 1280;
+    height = 720;
 
     canvas.width = width;
     canvas.height = height;
     context.drawImage(video, 0, 0, width, height);
 
     const data = canvas.toDataURL('image/png');
+    socket.send(JSON.stringify({ photo_index, data }));
 
-    if (photo_no == 1) {
-        img1.setAttribute('src', data);
-        img1.style.display = "block";
-        img_url_1 = data;
-    }
-    else if (photo_no == 2) {
-        img2.setAttribute('src', data);
-        img2.style.display = "block";
-        img_url_2 = data;
-    }
-    else if (photo_no == 3) {
-        img3.setAttribute('src', data);
-        img3.style.display = "block";
-        img_url_3 = data;
-    }
-    else if (photo_no == 4) {
-        img4.setAttribute('src', data);
-        img4.style.display = "block";
-        timer_elem.style.display = "none";
-        img_url_4 = data;
-    }
-
-    photo_no++;
-}
-
-function downloadFunc(filename, link_obj) {
-    let link = document.createElement('a');
-    link.href = link_obj;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    photo_index++;
 }
 
 function drawResult(img_1, img_2, img_3, img_4) {

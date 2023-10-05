@@ -1,8 +1,11 @@
 const { app, BrowserWindow, session } = require('electron')
+const { spawn } = require('child_process');
 const path = require('node:path')
 
+let mainWindow;
+
 function createWindow () {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     fullscreen: true,
@@ -34,6 +37,16 @@ function createWindow () {
 
 app.whenReady().then(() => {
   createWindow()
+
+  const pythonProcess = spawn('C:\\Users\\Somni\\anaconda3\\envs\\torch\\python.exe', ['processor.py']);
+
+  pythonProcess.stdout.on('data', (data) => {
+    console.log(`Python Output: ${data}`);
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    console.error(`Python Error: ${data}`);
+  });
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
