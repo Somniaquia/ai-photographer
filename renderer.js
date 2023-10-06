@@ -29,27 +29,39 @@ connectWebSocket();
 //#endregion
 
 //#region Utility for Sending Emails
-var mailer = require('nodemailer');
+var nodemailer = require('nodemailer');
+let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'isdj2023photozone@gmail.com',
+        pass: 'SchoolExplodes'
+    },
+    port: 465,
+    secure: true,
+    tls: {
+        rejectUnauthorized: false
+    }
+});
 
-mailer.SMTP = {
-    host: 'gmail.com',
-    port: 587,
-    use_authentication: true,
-    user: 'isdj2023photozone@gmail.com',
-    pass: 'SchoolExplodes'
-};
+async function sendEmail(receiver) {
+    try {
+        let message = {
+            from: 'isdj2023photozone@gmail.com',
+            to: receiver,
+            subject: '체험주간에 찍으신 엽기 AI 사진입니다!',
+        text: '정말 괴상하군요!',
+        html: '<p>정말 괴상하군요!</p>',
+        attachments: [
+            {
+                filename: 'image.jpg', // The file name you want the recipient to see
+                path: 'final_image.jpg' // Full path to the image file
+            }]
+        };
 
-function post_mail(receiver, data) {
-    mailer.send_mail({
-        sender: 'isdj2023photozone@gmail.com',
-        to: receiver,
-        subject: '체험주간에 찍으신 엽기 AI 사진입니다!',
-        body: '정말 괴상하군요!',
-        attachments: [{ 'filename': 'attatchment.txt', 'content': data }]
-    }), function (err) {
-        if (err) {
-            console.log("Error while sending the email: ", err)
-        }
+        let info = await transporter.sendMail(message);
+        console.log('Message sent successfully:', info.messageId);
+    } catch (error) {
+        console.log(error);
     }
 }
 //#endregion
@@ -66,7 +78,7 @@ document.getElementById('result_pop_img').addEventListener('click', () => {
     ipcRenderer.send('reload-app');
 });
 
-navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+navigator.mediaDevices.getUserMedia({ audio: false, video: { width : 1280, height : 720 } })
     .then(function (stream) {
         video = document.getElementById("preview_video");
         video.srcObject = stream;
@@ -107,8 +119,7 @@ async function takePhotos() {
             }
         }
         
-        drawResult(img_url_1, img_url_2, img_url_3, img_url_4);
-        sendFinalResult();
+        drawResult();
     } catch (error) {
         console.error(`Error:`, error);
     }
@@ -141,36 +152,20 @@ async function takePhoto(photo_index) {
     });
 }
 
-function drawResult(img_1, img_2, img_3, img_4) {
+function drawResult() {
     const canvas_result = document.getElementById("result_canvas");
     const ctx = canvas_result.getContext("2d");
 
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, 400, 1080);
 
-    let img1 = new Image();
-    img1.src = img_1;
-    img1.onload = () => {
-        ctx.drawImage(img1, 40, 40, 320, 180);
-    };
-
-    let img2 = new Image();
-    img2.src = img_2;
-    img2.onload = () => {
-        ctx.drawImage(img2, 40, 260, 320, 180);
-    };
-
-    let img3 = new Image();
-    img3.src = img_3;
-    img3.onload = () => {
-        ctx.drawImage(img3, 40, 480, 320, 180);
-    };
-
-    let img4 = new Image();
-    img4.src = img_4;
-    img4.onload = () => {
-        ctx.drawImage(img4, 40, 700, 320, 180);
-    };
+    for (let i = 0; i < 4; i++) {
+        let img = new Image();
+        img.src = `processed_image_${i + 1}.png`;
+        img.onload = () => {
+            ctx.drawImage(img, 40, 40 + (220*i), 320, 180);
+        };
+    }
 
     let img_logo = new Image();
     img_logo.src = "./img/logo.jpeg";
@@ -191,9 +186,14 @@ function drawResult(img_1, img_2, img_3, img_4) {
 
 function sendFinalResult() {
     let receiver_address = document.getElementById("email_input_input").value;
-    const data = document.getElementById("result_canvas")
+    const canvas = document.getElementById("result_canvas")
     
-    post_mail(receiver_address, data)
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+    fs.writeFileSync(`final_image_${receiver_address}.png`, imgBuffer);
+
+    // sendEmail(receiver_address)
 }
 
 function showResultOverlay(img_obj_url) {

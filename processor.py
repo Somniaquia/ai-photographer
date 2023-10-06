@@ -56,7 +56,7 @@ async def handle_socket(websocket, path):
             with open(f'image.png', 'rb') as f:
                 image = Image.open(f)
 
-                processed_image = processor.process(image, "A Ghibli character.")
+                processed_image = processor.process(image, "A painting of a person")
             processed_image.images[0].save(f'processed_image_{image_index}.png')
 
             await websocket.send(json.dumps({"success": True}))
