@@ -10,30 +10,14 @@
 
 <body>
     <div id="content">
-        <div id="top_logo_wrap">
-            <img src="./img/logo.jpeg" onclick="takePhotos()">
+        <img id="canvas" src="./img/canvas.jpg" onclick="takePhotos()">
+        <div id="progress">
+            <div id="bar"></div>
         </div>
-        <div id="img_wrap">
-            <div id="current_preview">
-                <video id="preview_video" muted></video>
-                <img id="img_4" src="">
-                <div id="timer">3</div>
-            </div>
-            <div id="result_wrap">
-                <div id="result_box">
-                    <img id="img_1" src="">
-                </div>
-                <div id="result_box">
-                    <img id="img_2" src="">
-                </div>
-                <div id="result_box">
-                    <img id="img_3" src="">
-                </div>
-                <div id="bottom_logo_wrap">
-                    <img id="reloadButton" src="./img/logo.jpeg">
-                </div>
-            </div>
-        </div>
+        <video id="video_1" width="1280" height="720" autoplay></video>
+        <video id="video_2" width="1280" height="720" autoplay></video>
+        <video id="video_3" width="1280" height="720" autoplay></video>
+        <video id="video_4" width="1280" height="720" autoplay></video>
         <div id="result_overlay">
             <div id="result_pop">
                 <img id="result_pop_img">
@@ -41,7 +25,7 @@
             <div id="email_input">
                 <h3>이 끔찍한 사진들을 보내실 이메일을 입력해주세요!</h3>
                 <input type="text" id="email_input_input" placeholder="E-mail">
-                <button onclick="sendFinalResult()">완료</button>
+                <button onclick="saveResult()">완료</button>
             </div>
         </div>
     </div>

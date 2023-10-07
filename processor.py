@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from diffusers import UniPCMultistepScheduler
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
+import asyncio
 
 class DiffusionProcessor:
     image = None
@@ -13,15 +14,33 @@ class DiffusionProcessor:
         self.pipe.scheduler = UniPCMultistepScheduler.from_config(self.pipe.scheduler.config)
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_xformers_memory_efficient_attention()
-        self.pipe.safety_checker = lambda images, clip_input: (images, False)
+        self.pipe.safety_cheker = lambda images, a: (images, False)
+        self.pipe.run_safety_checker = lambda images, a, b: (images, False)
     
-    def process(self, image, style: str):
-        image = np.array(image.resize((512, 512)))
+    async def send_message(self, step):
+        await self.websocket.send(json.dumps({"success": True, "progress": step}))
 
-        low_threshold = 100
-        high_threshold = 200
+    def callback(self, step, timestep, latents):
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.send_message(step))
+    
+    def crop_to_center(self, image, new_width, new_height):
+        width, height = image.size
+        left = (width - new_width)/2
+        top = (height - new_height)/2
+        right = (width + new_width)/2
+        bottom = (height + new_height)/2
 
-        image = cv2.Canny(image, low_threshold, high_threshold)
+        return image.crop((left, top, right, bottom))
+
+    def process(self, image, styles, websocket):
+        self.websocket = websocket
+        low_threshold = 50
+        high_threshold = 100
+
+        image = self.crop_to_center(image, image.size[1], image.size[1]).resize((512, 512))
+        image = cv2.Canny(np.array(image), low_threshold, high_threshold)
+
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
         image = Image.fromarray(image)
@@ -29,15 +48,15 @@ class DiffusionProcessor:
         generator = torch.Generator(device="cuda" if torch.cuda.is_available() else "cpu").manual_seed(2)
 
         output = self.pipe(
-            style + ", best quality, extremely detailed",
+            styles[0] + ", (best quality, masterpiece)",
             image,
-            negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality",
+            negative_prompt=styles[1] + ", worst quality, low quality, monochrome",
             num_inference_steps=20,
+            # callback=self.callback,
             generator=generator,
         )
 
         return output
-
 
 import asyncio
 import websockets
@@ -53,18 +72,20 @@ async def handle_socket(websocket, path):
         image_index = data.get('image_index', '')
 
         try:
-            with open(f'image.png', 'rb') as f:
+            with open(f'image_{image_index}.png', 'rb') as f:
                 image = Image.open(f)
 
-                processed_image = processor.process(image, "A painting of a person")
+                processed_image = processor.process(image, [open("config/prompt.txt", "r").readlines()[0], open("config/prompt.txt", "r").readlines()[1]], websocket)
             processed_image.images[0].save(f'processed_image_{image_index}.png')
 
-            await websocket.send(json.dumps({"success": True}))
+            await websocket.send(json.dumps({"success": True, "progress": 20}))
         except Exception as e:
             print(f"Error processing image {image_index}: {str(e)}")
-            await websocket.send(json.dumps({"success": False, "error": e}))
+            await websocket.send(json.dumps({"success": False, "error": e, "progress": None }))
 
-processor = DiffusionProcessor("runwayml/stable-diffusion-v1-5") # DiffusionProcessor("sd-dreambooth-library/messy_sketch_art_style")
+processor = DiffusionProcessor(open("config/model.txt", "r").read())
+# Lykon/DreamShaper <- For Halloween stuff
+# gsdf/Counterfeit-V2.5 <- every day we stray away from god
 
 start_server = websockets.serve(handle_socket, "localhost", "8765")
 print("WebSocket Server Running on ws://localhost:8765")

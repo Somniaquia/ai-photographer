@@ -70,21 +70,19 @@ async function sendEmail(receiver) {
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
 
-document.getElementById('reloadButton').addEventListener('click', () => {
-    ipcRenderer.send('reload-app');
-});
-
 document.getElementById('result_pop_img').addEventListener('click', () => {
     ipcRenderer.send('reload-app');
 });
 
 navigator.mediaDevices.getUserMedia({ audio: false, video: { width : 1280, height : 720 } })
     .then(function (stream) {
-        video = document.getElementById("preview_video");
-        video.srcObject = stream;
-        video.onloadedmetadata = function (e) {
-            video.play();
-        };
+        for (let i = 1; i <= 4; i++) {
+            video = document.getElementById(`video_${i}`);
+            video.srcObject = stream;
+            video.onloadedmetadata = function (e) {
+                video.play();
+            };
+        }
     })
     .catch(function (err) {
         console.log(err);
@@ -96,26 +94,13 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 
 async function takePhotos() {
     try {
-        if (clicked) return;
-        clicked = true;
-        
-        let timer_elem = document.getElementById("timer");
-        let images = [];
-
         for (let i = 1; i <= 4; i++) {
-            for (let j = 0; j <= 3; j++) {
-                timer_elem.innerText = 3 - j;
-                await sleep(1000);
-            }
-            
             await takePhoto(i);
-            const imagePath = path.join(`processed_image_${i}.png`);
             
-            if (fs.existsSync(imagePath)) {
-                document.getElementById(`img_${i}`).src = imagePath;
-                document.getElementById(`img_${i}`).style.display = 'block';
+            if (fs.existsSync(`processed_image_${i}.png`)) {
+                document.getElementById(`video_${i}`).poster = `processed_image_${i}.png`;
             } else {
-                console.error(`Image does not exist: ${imagePath}`);
+                console.error(`Image does not exist: ${`processed_image_${i}.png`}`);
             }
         }
         
@@ -126,30 +111,59 @@ async function takePhotos() {
 }
 
 async function takePhoto(photo_index) {
-    let canvas = document.getElementById("canvas");
+    let video = document.getElementById("video_4");
+    let canvas = document.createElement("canvas");
     const context = canvas.getContext('2d');
 
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const dataUrl = canvas.toDataURL('image/png');
     const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
     const imgBuffer = Buffer.from(base64Data, 'base64');
-    fs.writeFileSync('image.png', imgBuffer);
+    document.getElementById(`video_${photo_index}`).srcObject = null;
+    fs.writeFileSync(`image_${photo_index}.png`, imgBuffer);
+
+    document.getElementById(`video_${photo_index}`).poster = `image_${photo_index}.png`;
 
     return new Promise((resolve, reject) => {
         socket.send(JSON.stringify({ "image_index": photo_index }));
-
+        
         socket.onmessage = function (event) {
             let response = JSON.parse(event.data);
             console.log('Message received:', event.data);
 
             if (response.success == true) {
-                resolve();
+                if (response.progress == 20) {
+                    resolve();
+                    displayProgressBar(0, photo_index);
+                } else {
+                    displayProgressBar(response.progress, photo_index);
+                }
             } else {
                 reject(new Error(`Server error for photo ${photo_index}: ${response.error}`));
+                
             }
         };
     });
+}
+
+function displayProgressBar(progress, photo_index) {
+    let progressBar = document.getElementById('progress');
+
+    let position = document.getElementById(`video_${photo_index}`).getBoundingClientRect();
+    progressBar.style.top = position.y + 20 + "px";
+    progressBar.style.left = position.x + 30 + "px";
+
+    if (progress != 0) {
+        progressBar.style.visibility = "visible";
+        let bar = document.getElementById('bar');
+        bar.style.width = progress * 5 + "%";
+    } else {
+        progressBar.style.visibility = "hidden";
+    }
 }
 
 function drawResult() {
@@ -163,7 +177,11 @@ function drawResult() {
         let img = new Image();
         img.src = `processed_image_${i + 1}.png`;
         img.onload = () => {
-            ctx.drawImage(img, 40, 40 + (220*i), 320, 180);
+            ctx.save(); // Save the current state
+            ctx.translate(40 + 320, 0); // Move the context to where you will start drawing the image
+            ctx.scale(-1, 1); // Flip it!
+            ctx.drawImage(img, 0, 40 + (220 * i), 320, 180);
+            ctx.restore();
         };
     }
 
@@ -184,16 +202,21 @@ function drawResult() {
     }, 100);
 }
 
-function sendFinalResult() {
-    let receiver_address = document.getElementById("email_input_input").value;
+function saveResult() {
     const canvas = document.getElementById("result_canvas")
     
     const dataUrl = canvas.toDataURL('image/png');
     const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
     const imgBuffer = Buffer.from(base64Data, 'base64');
-    fs.writeFileSync(`final_image_${receiver_address}.png`, imgBuffer);
 
+    let receiver_address = document.getElementById("email_input_input").value;
+    fs.writeFileSync(`outputs/${receiver_address}.png`, imgBuffer);
     // sendEmail(receiver_address)
+
+    for (let i = 1; i <= 4; i++) {
+        fs.unlinkSync(`image_${i}.png`)
+        fs.unlinkSync(`processed_image_${i}.png`)
+    }
 }
 
 function showResultOverlay(img_obj_url) {

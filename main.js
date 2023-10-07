@@ -6,8 +6,8 @@ let mainWindow;
 
 function createWindow () {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 2560,
+    height: 1440,
     fullscreen: true,
     frame: false,
     webPreferences: {
@@ -45,11 +45,11 @@ app.whenReady().then(() => {
   const pythonProcess = spawn('C:\\Users\\Somni\\anaconda3\\envs\\torch\\python.exe', ['processor.py']);
 
   pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python Output: ${data}`);
+    console.log(`${data}`);
   });
 
   pythonProcess.stderr.on('data', (data) => {
-    console.error(`Python Error: ${data}`);
+    console.error(`${data}`);
   });
 
   app.on('activate', function () {
