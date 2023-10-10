@@ -40,16 +40,19 @@ function createWindow () {
 }
 
 app.whenReady().then(() => {
-  createWindow()
+	createWindow();
 
-  const pythonProcess = spawn('C:\\Users\\Somni\\anaconda3\\envs\\torch\\python.exe', ['processor.py']);
+  const pythonProcess = spawn('C:\\Users\\Somni\\anaconda3\\envs\\torch\\python.exe', ['processor.py'], { stdio: 'pipe' });
 
   pythonProcess.stdout.on('data', (data) => {
     console.log(`${data}`);
   });
 
   pythonProcess.stderr.on('data', (data) => {
-    console.error(`${data}`);
+	console.log(data.toString('utf8'));
+    if (data.includes("it/s")) {
+		mainWindow.webContents.send('KEY', data.toString('utf8'));
+	}
   });
 
   app.on('activate', function () {

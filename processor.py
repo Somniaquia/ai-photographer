@@ -1,3 +1,5 @@
+print("Loaded")
+
 import cv2
 import torch
 import numpy as np
@@ -16,13 +18,11 @@ class DiffusionProcessor:
         self.pipe.enable_xformers_memory_efficient_attention()
         self.pipe.safety_cheker = lambda images, a: (images, False)
         self.pipe.run_safety_checker = lambda images, a, b: (images, False)
-    
-    async def send_message(self, step):
-        await self.websocket.send(json.dumps({"success": True, "progress": step}))
 
-    def callback(self, step, timestep, latents):
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.send_message(step))
+    async def callback(self, step, timestep, latents):
+        f = open("progress.txt", "a")
+        f.write("-")
+        f.close()
     
     def crop_to_center(self, image, new_width, new_height):
         width, height = image.size
@@ -38,7 +38,7 @@ class DiffusionProcessor:
         low_threshold = 50
         high_threshold = 100
 
-        image = self.crop_to_center(image, image.size[1], image.size[1]).resize((512, 512))
+        image = self.crop_to_center(image, image.size[1], image.size[1]).resize((512, 512), resample=Image.LANCZOS)
         image = cv2.Canny(np.array(image), low_threshold, high_threshold)
 
         image = image[:, :, None]
@@ -66,7 +66,7 @@ from io import BytesIO
 from PIL import Image
 
 async def handle_socket(websocket, path):
-    print("Received websocket message")
+    open('progress.txt', 'w').close()
     async for message in websocket:
         data = json.loads(message)
         image_index = data.get('image_index', '')
@@ -76,7 +76,7 @@ async def handle_socket(websocket, path):
                 image = Image.open(f)
 
                 processed_image = processor.process(image, [open("config/prompt.txt", "r").readlines()[0], open("config/prompt.txt", "r").readlines()[1]], websocket)
-            processed_image.images[0].save(f'processed_image_{image_index}.png')
+            processed_image.images[0].transpose(Image.FLIP_LEFT_RIGHT).save(f'processed_image_{image_index}.png')
 
             await websocket.send(json.dumps({"success": True, "progress": 20}))
         except Exception as e:

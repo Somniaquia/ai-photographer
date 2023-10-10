@@ -34,7 +34,7 @@ let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'isdj2023photozone@gmail.com',
-        pass: 'SchoolExplodes'
+        pass: 'ugvf yowr jyby uden'
     },
     port: 465,
     secure: true,
@@ -48,13 +48,13 @@ async function sendEmail(receiver) {
         let message = {
             from: 'isdj2023photozone@gmail.com',
             to: receiver,
-            subject: '체험주간에 찍으신 엽기 AI 사진입니다!',
-        text: '정말 괴상하군요!',
-        html: '<p>정말 괴상하군요!</p>',
-        attachments: [
+            subject: 'AI&SW 체험주간에 참여해주셔서 감사합니다!',
+            text: 'AI 포토대진에서 촬영한 사진을 보내드립니다!',
+            html: '<h3>AI 포토대진에서 촬영한 사진을 보내드립니다!</h3>',
+            attachments: [
             {
-                filename: 'image.jpg', // The file name you want the recipient to see
-                path: 'final_image.jpg' // Full path to the image file
+                filename: 'photo.png', // The file name you want the recipient to see
+                path: `outputs/${receiver}.png` // Full path to the image file
             }]
         };
 
@@ -70,10 +70,6 @@ async function sendEmail(receiver) {
 const { desktopCapturer, remote } = require('electron');
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
-
-document.getElementById('result_pop_img').addEventListener('click', () => {
-    ipcRenderer.send('reload-app');
-});
 
 navigator.mediaDevices.getUserMedia({ audio: false, video: { width : 640, height : 416 } })
     .then(function (stream) {
@@ -100,6 +96,7 @@ async function takePhotos() {
             
             if (fs.existsSync(`processed_image_${i}.png`)) {
                 document.getElementById(`video_${i}`).poster = `processed_image_${i}.png`;
+                document.getElementById(`video_${i}`).style.transform = 'none';
             } else {
                 console.error(`Image does not exist: ${`processed_image_${i}.png`}`);
             }
@@ -113,7 +110,10 @@ async function takePhotos() {
     }
 }
 
+let PHOTO_INDEX = undefined;
+
 async function takePhoto(photo_index) {
+    PHOTO_INDEX = photo_index;
     let video = document.getElementById("video_4");
     let canvas = document.createElement("canvas");
     const context = canvas.getContext('2d');
@@ -130,7 +130,7 @@ async function takePhoto(photo_index) {
     fs.writeFileSync(`image_${photo_index}.png`, imgBuffer);
 
     document.getElementById(`video_${photo_index}`).poster = `image_${photo_index}.png`;
-
+    
     return new Promise((resolve, reject) => {
         socket.send(JSON.stringify({ "image_index": photo_index }));
         
@@ -147,7 +147,6 @@ async function takePhoto(photo_index) {
                 }
             } else {
                 reject(new Error(`Server error for photo ${photo_index}: ${response.error}`));
-                
             }
         };
     });
@@ -184,12 +183,14 @@ function saveResult() {
 
     let receiver_address = document.getElementById("email_input_input").value;
     fs.writeFileSync(`outputs/${receiver_address}.png`, imgBuffer);
-    // sendEmail(receiver_address)
+    sendEmail(receiver_address);
 
     for (let i = 1; i <= 4; i++) {
         fs.unlinkSync(`image_${i}.png`)
         fs.unlinkSync(`processed_image_${i}.png`)
     }
+
+        ipcRenderer.send('reload-app');
 }
 
 function showResultOverlay(img_obj_url) {
@@ -209,11 +210,6 @@ function generateResult() {
     const backgroundImg = new Image();
     backgroundImg.src = "./img/canvas.jpg";
     ctx.drawImage(backgroundImg, 0, 0, 1920, 1080);
-    
-    // const img1 = document.getElementById("video_1");
-    // const img2 = document.getElementById("video_2");
-    // const img3 = document.getElementById("video_3");
-    // const img4 = document.getElementById("video_4");
 
     const img1 = new Image();
     img1.src = "./processed_image_1.png";
@@ -224,19 +220,14 @@ function generateResult() {
     const img4 = new Image();
     img4.src = "./processed_image_4.png";
 
-    const img1f = flip_image(img1);
-    const img2f = flip_image(img2);
-    const img3f = flip_image(img3);
-    const img4f = flip_image(img4);
-
     drawImageBorder(ctx, 170, 122, 640, 416, 10);
     drawImageBorder(ctx, 865, 122, 640, 416, 10);
     drawImageBorder(ctx, 425, 590, 640, 416, 10);
     drawImageBorder(ctx, 1120, 590, 640, 416, 10);
-    roundedImage(ctx, img1f, 170, 122, 640, 416, 10);
-    roundedImage(ctx, img2f, 865, 122, 640, 416, 10);
-    roundedImage(ctx, img3f, 425, 590, 640, 416, 10);
-    roundedImage(ctx, img4f, 1120, 590, 640, 416, 10);
+    roundedImage(ctx, img1, 170, 122, 640, 416, 10);
+    roundedImage(ctx, img2, 865, 122, 640, 416, 10);
+    roundedImage(ctx, img3, 425, 590, 640, 416, 10);
+    roundedImage(ctx, img4, 1120, 590, 640, 416, 10);
 
     showResultOverlay(canvas.toDataURL('image/data'));
 }
@@ -264,8 +255,13 @@ function roundedImage(ctx, img, x, y, width, height, radius) {
     ctx.restore();
 }
 
-function flip_image(img) {
-    const new_img = img;
-
-    return new_img;
+function extractNumberBeforeSlash(inputStr) {
+    const match = inputStr.match(/(\d+)\/\d+/);
+    return match ? parseInt(match[1], 10) : null;
 }
+
+ipcRenderer.on('KEY', (e, data) => {
+    console.log(data);
+
+    displayProgressBar(extractNumberBeforeSlash(data), PHOTO_INDEX);
+});
