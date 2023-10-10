@@ -67,6 +67,7 @@ async function sendEmail(receiver) {
 //#endregion
 
 //#region Main Application
+const { desktopCapturer, remote } = require('electron');
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
 
@@ -74,7 +75,7 @@ document.getElementById('result_pop_img').addEventListener('click', () => {
     ipcRenderer.send('reload-app');
 });
 
-navigator.mediaDevices.getUserMedia({ audio: false, video: { width : 1280, height : 720 } })
+navigator.mediaDevices.getUserMedia({ audio: false, video: { width : 640, height : 416 } })
     .then(function (stream) {
         for (let i = 1; i <= 4; i++) {
             video = document.getElementById(`video_${i}`);
@@ -104,7 +105,9 @@ async function takePhotos() {
             }
         }
         
-        drawResult();
+        setTimeout(() => {
+            generateResult();
+        }, 2000);
     } catch (error) {
         console.error(`Error:`, error);
     }
@@ -166,44 +169,14 @@ function displayProgressBar(progress, photo_index) {
     }
 }
 
-function drawResult() {
-    const canvas_result = document.getElementById("result_canvas");
-    const ctx = canvas_result.getContext("2d");
-
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, 400, 1080);
-
-    for (let i = 0; i < 4; i++) {
-        let img = new Image();
-        img.src = `processed_image_${i + 1}.png`;
-        img.onload = () => {
-            ctx.save(); // Save the current state
-            ctx.translate(40 + 320, 0); // Move the context to where you will start drawing the image
-            ctx.scale(-1, 1); // Flip it!
-            ctx.drawImage(img, 0, 40 + (220 * i), 320, 180);
-            ctx.restore();
-        };
-    }
-
-    let img_logo = new Image();
-    img_logo.src = "./img/logo.jpeg";
-    img_logo.onload = () => {
-        ctx.drawImage(img_logo, 50, 902, 300, 95);
-    };
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = '28px "Fuzzy Bubbles"';
-    let date = new Date();
-    let text = date.getFullYear() + '. ' + (date.getMonth() + 1) + '. ' + date.getDate();
-    ctx.fillText(text, 113, 1030);
-
-    setTimeout(() => {
-        showResultOverlay(document.getElementById("result_canvas").toDataURL('image/png'));
-    }, 100);
+async function drawResult() {
+    html2canvas(document.querySelector("body")).then(canvas => {
+        document.body.appendChild(canvas);
+    });
 }
 
 function saveResult() {
-    const canvas = document.getElementById("result_canvas")
+    const canvas = document.getElementById("result_canvas");
     
     const dataUrl = canvas.toDataURL('image/png');
     const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
@@ -224,3 +197,75 @@ function showResultOverlay(img_obj_url) {
     document.getElementById("result_pop_img").src = img_obj_url;
 }
 //#endregion
+
+window.onload = () => {
+    document.getElementById("canvas").addEventListener('click', takePhotos);
+};
+
+function generateResult() {
+    const canvas = document.getElementById("result_canvas");
+    const ctx = canvas.getContext('2d');
+
+    const backgroundImg = new Image();
+    backgroundImg.src = "./img/canvas.jpg";
+    ctx.drawImage(backgroundImg, 0, 0, 1920, 1080);
+    
+    // const img1 = document.getElementById("video_1");
+    // const img2 = document.getElementById("video_2");
+    // const img3 = document.getElementById("video_3");
+    // const img4 = document.getElementById("video_4");
+
+    const img1 = new Image();
+    img1.src = "./processed_image_1.png";
+    const img2 = new Image();
+    img2.src = "./processed_image_2.png";
+    const img3 = new Image();
+    img3.src = "./processed_image_3.png";
+    const img4 = new Image();
+    img4.src = "./processed_image_4.png";
+
+    const img1f = flip_image(img1);
+    const img2f = flip_image(img2);
+    const img3f = flip_image(img3);
+    const img4f = flip_image(img4);
+
+    drawImageBorder(ctx, 170, 122, 640, 416, 10);
+    drawImageBorder(ctx, 865, 122, 640, 416, 10);
+    drawImageBorder(ctx, 425, 590, 640, 416, 10);
+    drawImageBorder(ctx, 1120, 590, 640, 416, 10);
+    roundedImage(ctx, img1f, 170, 122, 640, 416, 10);
+    roundedImage(ctx, img2f, 865, 122, 640, 416, 10);
+    roundedImage(ctx, img3f, 425, 590, 640, 416, 10);
+    roundedImage(ctx, img4f, 1120, 590, 640, 416, 10);
+
+    showResultOverlay(canvas.toDataURL('image/data'));
+}
+
+function drawImageBorder(ctx, x, y, width, height, radius) {
+    ctx.roundRect(x - 2, y - 2, width + 4, height + 4, radius);
+    ctx.fill();
+}
+
+function roundedImage(ctx, img, x, y, width, height, radius) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(img, x, y, width, height);
+    ctx.restore();
+}
+
+function flip_image(img) {
+    const new_img = img;
+
+    return new_img;
+}

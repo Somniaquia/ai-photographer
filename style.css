@@ -142,8 +142,14 @@ body {
 }
 
 #result_canvas {
-    width: 400px;
+    width: 1920px;
     height: 1080px;
+    display: block;
+}
+
+#flipper {
+    width: 640px;
+    height: 416px;
     display: block;
 }
 
@@ -174,10 +180,10 @@ body {
 }
 
 #result_pop {
-    width: 300px;
-    height: 810px;
+    width: 400px;
+    height: 225px;
     margin: 0 auto;
-    margin-top: 135px;
+    margin-top: 435px;
 }
 
 #result_pop_img {
@@ -188,7 +194,7 @@ body {
     animation-timing-function: ease;
     animation-fill-mode: forwards;
     animation-delay: 600ms;
-    transform: translateY(150%);
+    transform: translateY(300%);
 }
 
 #email_input {
@@ -207,19 +213,19 @@ body {
 
 @keyframes show_img_anim {
     0% {
-        transform: translateY(150%);
+        transform: translateY(300%) scale(300%);
     }
 
     30% {
-        transform: translateY(0%);
+        transform: translateY(0%) scale(300%);
     }
 
     70% {
-        transform: translateY(0%) translateX(0%);
+        transform: translateY(0%) translateX(0%) scale(300%);
     }
 
     100% {
-        transform: translateY(0%) translateX(-600px);
+        transform: translateY(0%) translateX(-500px) scale(140%);
     }
 }
 

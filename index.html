@@ -5,12 +5,13 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="./style.css">
     <script src="./main.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <title>무언가 이상한 AI 대진네컷!</title>
 </head>
 
 <body>
     <div id="content">
-        <img id="canvas" src="./img/canvas.jpg" onclick="takePhotos()">
+        <img id="canvas" src="./img/canvas.jpg">
         <div id="progress">
             <div id="bar"></div>
         </div>
@@ -23,14 +24,15 @@
                 <img id="result_pop_img">
             </div>
             <div id="email_input">
-                <h3>이 끔찍한 사진들을 보내실 이메일을 입력해주세요!</h3>
+                <h3>이 사진을 받으실 이메일을 입력해주세요!</h3>
                 <input type="text" id="email_input_input" placeholder="E-mail">
                 <button onclick="saveResult()">완료</button>
             </div>
         </div>
     </div>
     <canvas id="canvas" style="display: none;"></canvas>
-    <canvas id="result_canvas" width="400" height="1080" style="display: none;"></canvas>
+    <canvas id="result_canvas" width="1920" height="1080" style="display: none;"></canvas>
+    <canvas id="flipper" width="640" height="416" style="display: none;"></canvas>
     
     <script src="./renderer.js"></script>
 </body>
